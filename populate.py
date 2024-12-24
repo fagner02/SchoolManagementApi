@@ -106,6 +106,7 @@ session = get_session()
 
 session.add(student1)
 session.add(student2)
+session.commit()
 
 session.add(teacher1)
 session.add(teacher2)
@@ -117,6 +118,7 @@ session.add(subject3)
 session.add(class1)
 session.add(class2)
 session.add(class3)
+session.commit()
 
 session.add(assignment1)
 session.add(assignment2)
