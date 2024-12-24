@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Response
+from fastapi.responses import FileResponse
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlmodel import SQLModel
@@ -60,7 +61,7 @@ def get_assignments(session: Session = Depends(get_session)):
         return {"error": str(e)}
 
 
-@app.get("/assignment_submission")
+@app.get("/submission")
 def get_assignment_submissions(session: Session = Depends(get_session)):
     try:
         return session.query(AssignmentSubmission).all()
@@ -132,7 +133,7 @@ def create_assignment(assignment: Assignment, session: Session = Depends(get_ses
         return {"error": str(e)}
 
 
-@app.post("/assignment_submission")
+@app.post("/submission")
 def create_assignment_submission(
     assignment_submission: AssignmentSubmission, session: Session = Depends(get_session)
 ):
@@ -177,5 +178,18 @@ def create_class_grades(
         session.add(class_grades)
         session.commit()
         return class_grades
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.get(
+    "/submission/file",
+    responses={200: {"content": {"text/txt": {}}}},
+    response_class=Response,
+)
+def get_submission_file(submission_id: int, session: Session = Depends(get_session)):
+    try:
+        submission = session.get(AssignmentSubmission, submission_id)
+        return Response(submission.submission_file, media_type="text/txt")
     except Exception as e:
         return {"error": str(e)}
