@@ -1,7 +1,6 @@
 import os
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Response
-from fastapi.responses import FileResponse
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlmodel import SQLModel
