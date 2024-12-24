@@ -1,6 +1,21 @@
+from functools import partial
+import re
 from typing import Optional, List
 from sqlalchemy import Column, LargeBinary
-from sqlmodel import Relationship, SQLModel, Field, BLOB
+from sqlalchemy.orm import declared_attr
+from sqlmodel import Relationship, SQLModel as _SQLModel, Field
+
+_snake_1 = partial(re.compile(r"(.)((?<![^A-Za-z])[A-Z][a-z]+)").sub, r"\1_\2")
+
+
+def snake_case(string: str) -> str:
+    return _snake_1(string).lower()
+
+
+class SQLModel(_SQLModel):
+    @declared_attr
+    def __tablename__(cls) -> str:
+        return snake_case(cls.__name__)
 
 
 class Student(SQLModel, table=True):
@@ -13,6 +28,7 @@ class Student(SQLModel, table=True):
         back_populates="student"
     )
     enrollments: List["Enrollment"] = Relationship(back_populates="student")
+    class_grades: List["ClassGrades"] = Relationship(back_populates="student")
 
 
 class Teacher(SQLModel, table=True):
@@ -22,6 +38,7 @@ class Teacher(SQLModel, table=True):
     email: str
     qualification: str
     entry_date: str
+    classes: List["Class"] = Relationship(back_populates="teacher")
 
 
 class Subject(SQLModel, table=True):
@@ -36,15 +53,15 @@ class Subject(SQLModel, table=True):
 
 class Class(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    grade: str
     subject_id: int = Field(default=None, foreign_key="subject.id")
-    teacher: str
+    teacher_id: int = Field(default=None, foreign_key="teacher.id")
     student_limit: int
     schedule: str
     subject: Optional[Subject] = Relationship(back_populates="classes")
     assignments: List["Assignment"] = Relationship(back_populates="class_")
     enrollments: List["Enrollment"] = Relationship(back_populates="class_")
     class_grades: List["ClassGrades"] = Relationship(back_populates="class_")
+    teacher: Optional[Teacher] = Relationship(back_populates="classes")
 
 
 class Assignment(SQLModel, table=True):
@@ -59,19 +76,21 @@ class Assignment(SQLModel, table=True):
     )
 
 
-class AssignmentSubmission(SQLModel, table=True):
+class AssignmentSubmission(
+    SQLModel, table=True, custom_table_name="assignment_submission"
+):
     id: Optional[int] = Field(default=None, primary_key=True)
     student_id: int = Field(default=None, foreign_key="student.id")
     assignment_id: int = Field(default=None, foreign_key="assignment.id")
     submission_date: str
-    comments: str
+    comments: Optional[str]
     submission_file: Optional[bytes] = Field(sa_column=Column(LargeBinary))
     grade: Optional["AssignmentGrade"] = Relationship(back_populates="submission")
     student: Optional[Student] = Relationship(back_populates="assignment_submissions")
     assignment: Optional[Assignment] = Relationship(back_populates="submissions")
 
 
-class AssignmentGrade(SQLModel, table=True):
+class AssignmentGrade(SQLModel, table=True, custom_table_name="assignment_grade"):
     id: Optional[int] = Field(default=None, primary_key=True)
     submission_id: int = Field(default=None, foreign_key="assignment_submission.id")
     grade: float
