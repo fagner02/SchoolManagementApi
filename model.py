@@ -1,49 +1,64 @@
 from pydantic import BaseModel
 
-# modelos para o Sistema de Gerenciamento Escolar
+
+class Student(BaseModel):
+    name: str
+    age: int
+    semester: str
+    registration: int
+    entry_date: str
 
 
-class Aluno(BaseModel):
-    nome: str
-    idade: int
-    serie: str
+class Teacher(BaseModel):
+    name: str
+    age: int
+    email: str
+    qualification: str
+    entry_date: str
 
 
-class Professor(BaseModel):
-    nome: str
-    idade: int
-    disciplina: str
+class Subject(BaseModel):
+    name: str
+    syllabus: str
+    code: str
+    workload: int
+    prerequisite: str
 
 
-class Disciplina(BaseModel):
-    nome: str
-    carga_horaria: int
+class Class(BaseModel):
+    grade: str
+    subject: str
+    teacher: str
+    student_limit: int
+    schedule: str
 
 
-class Turma(BaseModel):
-    serie: str
-    disciplina: str
-    professor: str
+class Assignment(BaseModel):
+    class_id: int
+    description: str
+    due_date: str
+    created_at: str
 
 
-class Nota(BaseModel):
-    aluno: str
-    disciplina: str
-    nota: float
+class AssignmentSubmission(BaseModel):
+    student_id: int
+    assignment_id: str
+    submission_date: str
+    comments: str
+    submission_file: bytearray
 
 
-class Matricula(BaseModel):
-    aluno: str
-    turma: str
+class AssignmentGrade(BaseModel):
+    submission_id: int
+    grade: float
 
 
-class Boletim(BaseModel):
-    aluno: str
-    serie: str
-    disciplina: str
-    nota: float
+class Enrollment(BaseModel):
+    student_id: int
+    class_id: int
 
 
-class AlunoNota(BaseModel):
-    aluno: str
-    nota: float
+class ClassGrades(BaseModel):
+    student_id: int
+    class_id: int
+    grade: float
