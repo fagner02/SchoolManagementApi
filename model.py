@@ -1,9 +1,9 @@
 from functools import partial
 import re
 from typing import Optional, List
-from sqlalchemy import Column, LargeBinary
-from sqlalchemy.orm import declared_attr
-from sqlmodel import Relationship, SQLModel as _SQLModel, Field
+from sqlalchemy import Column, ForeignKey, LargeBinary
+from sqlalchemy.orm import declared_attr, relationship, Mapped, mapped_column
+from sqlmodel import Relationship, SQLModel as _SQLModel, Field, Table
 
 _snake_1 = partial(re.compile(r"(.)((?<![^A-Za-z])[A-Z][a-z]+)").sub, r"\1_\2")
 
@@ -18,6 +18,11 @@ class SQLModel(_SQLModel):
         return snake_case(cls.__name__)
 
 
+class Enrollment(SQLModel, table=True):
+    student_id: int = Field(default=None, foreign_key="student.id", primary_key=True)
+    class_id: int = Field(default=None, foreign_key="class.id", primary_key=True)
+
+
 class Student(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
@@ -27,7 +32,9 @@ class Student(SQLModel, table=True):
     assignment_submissions: List["AssignmentSubmission"] = Relationship(
         back_populates="student"
     )
-    enrollments: List["Enrollment"] = Relationship(back_populates="student")
+    classes: List["Class"] = Relationship(
+        back_populates="students", link_model=Enrollment
+    )
     class_grades: List["ClassGrades"] = Relationship(back_populates="student")
 
 
@@ -59,8 +66,10 @@ class Class(SQLModel, table=True):
     schedule: str
     subject: Optional[Subject] = Relationship(back_populates="classes")
     assignments: List["Assignment"] = Relationship(back_populates="class_")
-    enrollments: List["Enrollment"] = Relationship(back_populates="class_")
-    class_grades: List["ClassGrades"] = Relationship(back_populates="class_")
+    students: List["Student"] = Relationship(
+        back_populates="classes", link_model=Enrollment
+    )
+    class_grades: Mapped[List["ClassGrades"]] = Relationship(back_populates="class_")
     teacher: Optional[Teacher] = Relationship(back_populates="classes")
 
 
@@ -97,14 +106,6 @@ class AssignmentGrade(SQLModel, table=True, custom_table_name="assignment_grade"
     submission: Optional[AssignmentSubmission] = Relationship(back_populates="grade")
 
 
-class Enrollment(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    student_id: int = Field(default=None, foreign_key="student.id")
-    class_id: int = Field(default=None, foreign_key="class.id")
-    student: Optional[Student] = Relationship(back_populates="enrollments")
-    class_: Optional[Class] = Relationship(back_populates="enrollments")
-
-
 class ClassGrades(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     student_id: int = Field(default=None, foreign_key="student.id")
@@ -112,3 +113,28 @@ class ClassGrades(SQLModel, table=True):
     grade: float
     student: Optional[Student] = Relationship(back_populates="class_grades")
     class_: Optional[Class] = Relationship(back_populates="class_grades")
+
+
+class SubjectPublic(SQLModel):
+    id: Optional[int]
+    name: str
+    syllabus: str
+    code: str
+    workload: int
+    prerequisite: str
+
+
+class ClassPublic(SQLModel):
+    id: Optional[int]
+    subject: "Subject"
+    teacher_id: int
+    student_limit: int
+    schedule: str
+
+
+class StudentPublic(SQLModel):
+    id: Optional[int]
+    name: str
+    age: int
+    semester: str
+    classes: list["ClassPublic"] = []
