@@ -1,10 +1,13 @@
+import json
 import os
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Response
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlmodel import SQLModel
 from model import (
+    Student,
+    StudentPublic,
     Teacher,
     Subject,
     Class,
@@ -17,7 +20,7 @@ from model import (
 
 
 load_dotenv("config.env")
-engine = create_engine(os.getenv("DATABASE_URL"))
+engine = create_engine(os.getenv("DATABASE_URL"), echo=False)
 SQLModel.metadata.create_all(engine)
 
 
@@ -26,6 +29,15 @@ def get_session() -> Session:
 
 
 app = FastAPI()
+
+
+@app.get("/student", response_model=StudentPublic)
+def get_students(session: Session = Depends(get_session)):
+    try:
+        res = session.query(Student).first()
+        return res
+    except Exception as e:
+        return {"error": str(e)}
 
 
 @app.get("/teacher")
