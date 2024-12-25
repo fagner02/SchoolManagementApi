@@ -31,11 +31,21 @@ def get_session() -> Session:
 app = FastAPI()
 
 
-@app.get("/student", response_model=StudentPublic)
+@app.get("/student")
 def get_students(session: Session = Depends(get_session)):
     try:
-        res = session.query(Student).first()
+        res = session.query(Student).all()
         return res
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.post("/student")
+def create_student(student: Student, session: Session = Depends(get_session)):
+    try:
+        session.add(student)
+        session.commit()
+        return student
     except Exception as e:
         return {"error": str(e)}
 
