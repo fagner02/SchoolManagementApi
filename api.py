@@ -1,9 +1,9 @@
-import json
 import os
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, Response, HTTPException
+from fastapi import Depends, FastAPI
+from fastapi_crudrouter import SQLAlchemyCRUDRouter as CRUDRouter
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, joinedload, Query
+from sqlalchemy.orm import Session
 from sqlmodel import SQLModel
 from model import (
     Student,
@@ -24,507 +24,170 @@ SQLModel.metadata.create_all(engine)
 def get_session() -> Session:
     return Session(engine)
 
+
 app = FastAPI()
 
+student_router = CRUDRouter(schema=Student, db_model=Student, db=get_session)
+teaher_router = CRUDRouter(schema=Teacher, db_model=Teacher, db=get_session)
+subject_router = CRUDRouter(schema=Subject, db_model=Subject, db=get_session)
+class_router = CRUDRouter(schema=Class, db_model=Class, db=get_session)
+assignment_router = CRUDRouter(schema=Assignment, db_model=Assignment, db=get_session)
+assignment_submission_router = CRUDRouter(schema=AssignmentSubmission, db_model=AssignmentSubmission, db=get_session)
+assignment_grade_router = CRUDRouter(schema=AssignmentGrade, db_model=AssignmentGrade, db=get_session)
+enrollment_router = CRUDRouter(schema=Enrollment, db_model=Enrollment, db=get_session)
+class_grades_router = CRUDRouter(schema=ClassGrades, db_model=ClassGrades, db=get_session)
 
-@app.get("/")
-def home():
-    return {"msg": "Bem-vindo ao Sistema de Gerenciamento Escolar"}
+app.include_router(student_router)
+app.include_router(teaher_router)
+app.include_router(subject_router)
+app.include_router(class_router)
+app.include_router(assignment_router)
+app.include_router(assignment_submission_router)
+app.include_router(assignment_grade_router)
+app.include_router(enrollment_router)
+app.include_router(class_grades_router)
 
-# ---------------------------
-# CRUD para Student
-# ---------------------------
 
-@app.get("/student")
-def get_students(session: Session = Depends(get_session)):
+@app.get("/student_qtd", tags=["Student"])
+def get_student_qtd(session: Session = Depends(get_session)):
     try:
-        res = session.query(Student).all()
-        return res
+        qtd = session.query(Student).count()
+        return {"quantidade": qtd}
     except Exception as e:
         return {"error": str(e)}
 
-
-@app.post("/student")
-def create_student(student: Student, session: Session = Depends(get_session)):
+@app.get("/teacher_qtd", tags=["Teacher"])
+def get_teacher_qtd(session: Session = Depends(get_session)):
     try:
-        session.add(student)
-        session.commit()
-        return student
+        qtd = session.query(Teacher).count()
+        return {"quantidade": qtd}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/subject_qtd", tags=["Subject"])
+def get_subject_qtd(session: Session = Depends(get_session)):
+    try:
+        qtd = session.query(Subject).count()
+        return {"quantidade": qtd}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/class_qtd", tags=["Class"])
+def get_class_qtd(session: Session = Depends(get_session)):
+    try:
+        qtd = session.query(Class).count()
+        return {"quantidade": qtd}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/assignment_qtd", tags=["Assignment"])
+def get_assignment_qtd(session: Session = Depends(get_session)):
+    try:
+        qtd = session.query(Assignment).count()
+        return {"quantidade": qtd}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("submission_qtd", tags=["Assignment_submission"])
+def get_qtd(session: Session = Depends(get_session)):
+    try:
+        qtd = session.query(Student).count()
+        return  {"quantidade": qtd}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/grade_qtd", tags=["Assignment_grade"])
+def get_grade_qtd(session: Session = Depends(get_session)):
+    try:
+        qtd = session.query(AssignmentGrade).count()
+        return {"quantidade": qtd}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/enrollment_qtd", tags=["Enrollment"])
+def get_enrollment_qtd(session: Session = Depends(get_session)):
+    try:
+        qtd = session.query(Enrollment).count()
+        return {"quantidade": qtd}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/class_grades_qtd", tags=["Class_grades"])
+def get_class_grades_qtd(session: Session = Depends(get_session)):
+    try:
+        qtd = session.query(ClassGrades).count()
+        return {"quantidade": qtd}
     except Exception as e:
         return {"error": str(e)}
     
-@app.put("/student/{student_id}")
-def update_student(student_id: int, student: Student, session: Session = Depends(get_session)):
+@app.get("/student_page",tags=["Student"])
+def get_student_page(page: int = 0, limit: int = 10, session: Session = Depends(get_session)):
     try:
-        existing_student = session.get(Student, student_id)
-        if not existing_student:
-            return {"error": "Estudante não encontrado"}
-        for key, value in student.dict(exclude_unset=True).items():
-            setattr(existing_student, key, value)
-        session.add(existing_student)
-        session.commit()
-        return existing_student
-    except Exception as e:
-        return {"error": str(e)}
-    
-@app.delete("/student/{student_id}")
-def delete_student(student_id: int, session: Session = Depends(get_session)):
-    try:
-        existing_student = session.get(Student, student_id)
-        if not existing_student:
-            return {"error": "Estudante não encontrado"}
-        session.delete(existing_student)
-        session.commit()
-        return {"msg": "Estudante deletado com sucesso!"}
+        students = session.query(Student).limit(limit).offset(page*limit).all()
+        return students
     except Exception as e:
         return {"error": str(e)}
 
-# ---------------------------
-# CRUD para Teacher
-# ---------------------------
-
-@app.get("/teacher")
-def get_teachers(session: Session = Depends(get_session)):
+@app.get("/teacher_page", tags=["Teacher"])
+def get_teacher_page(page: int=0, limit: int = 10, session: Session = Depends(get_session)):
     try:
-        return session.query(Teacher).all()
+        teachers = session.query(Teacher).limit(limit).offset(page*limit).all()
+        return teachers
     except Exception as e:
         return {"error": str(e)}
     
-@app.post("/teacher")
-def create_teacher(teacher: Teacher, session: Session = Depends(get_session)):
+@app.get("/subject_page", tags=["Subject"])    
+def get_subject_page(page: int=0, limit: int = 10, session: Session = Depends(get_session)):
     try:
-        session.add(teacher)
-        session.commit()
-        return teacher
+        subjects = session.query(Subject).limit(limit).offset(page*limit).all()
+        return subjects
     except Exception as e:
         return {"error": str(e)}
     
-@app.put("/teacher/{teacher_id}")
-def update_teacher(teacher_id: int, teacher: Teacher, session: Session = Depends(get_session)):
+@app.get("/class_page", tags=["Class"])
+def get_class_page(page: int=0, limit: int = 10, session: Session = Depends(get_session)):
     try:
-        existing_teacher = session.get(Teacher, teacher_id)
-        if not existing_teacher:
-            return {"error": "Professor não encontrado"}
-        for key, value in teacher.dict(exclude_unset=True).items():
-            setattr(existing_teacher, key, value)
-        session.add(existing_teacher)
-        session.commit()
-        return existing_teacher
+        classes = session.query(Class).limit(limit).offset(page*limit).all()
+        return classes
     except Exception as e:
         return {"error": str(e)}
     
-@app.delete("/teacher/{teacher_id}")
-def delete_teacher(teacher_id: int, session: Session = Depends(get_session)):
+@app.get("/assignment_page", tags=["Assignment"])
+def get_assignment_page(page: int=0, limit: int = 10, session: Session = Depends(get_session)):
     try:
-        existing_teacher = session.get(Teacher, teacher_id)
-        if not existing_teacher:
-            return {"error": "Professor não encontrado"}
-        session.delete(existing_teacher)
-        session.commit()
-        return {"msg": "Professor deletado com sucesso!"}
-    except Exception as e:
-        return {"error": str(e)}
-
-# ---------------------------
-# CRUD para Class
-# ---------------------------
-
-@app.get("/class")
-def get_classes(session: Session = Depends(get_session)):
-    try:
-        return session.query(Class).all()
+        assignments = session.query(Assignment).limit(limit).offset(page*limit).all()
+        return assignments
     except Exception as e:
         return {"error": str(e)}
     
-@app.post("/class")
-def create_class(class_: Class, session: Session = Depends(get_session)):
+@app.get("/submission_page", tags=["Assignment_submission"])
+def get_submission_page(page: int=0, limit: int = 10, session: Session = Depends(get_session)):
     try:
-        session.add(class_)
-        session.commit()
-        return class_
+        submissions = session.query(AssignmentSubmission).limit(limit).offset(page*limit).all()
+        return submissions
     except Exception as e:
         return {"error": str(e)}
     
-@app.put("/class/{class_id}")
-def update_class(class_id: int, class_: Class, session: Session = Depends(get_session)):
+@app.get("/grade_page", tags=["Assignment_grade"])
+def get_grade_page(page: int=0, limit: int = 10, session: Session = Depends(get_session)):
     try:
-        existing_class = session.get(Class, class_id)
-        if not existing_class:
-            return {"error": "Turma não encontrada"}
-        for key, value in class_.dict(exclude_unset=True).items():
-            setattr(existing_class, key, value)
-        session.add(existing_class)
-        session.commit()
-        return existing_class
+        grades = session.query(AssignmentGrade).limit(limit).offset(page*limit).all()
+        return grades
     except Exception as e:
         return {"error": str(e)}
     
-@app.delete("/class/{class_id}")
-def delete_class(class_id: int, session: Session = Depends(get_session)):
+@app.get("/enrollment_page", tags=["Enrollment"])
+def get_enrollment_page(page: int=0, limit: int = 10, session: Session = Depends(get_session)):
     try:
-        existing_class = session.get(Class, class_id)
-        if not existing_class:
-            return {"error": "Turma não encontrada"}
-        session.delete(existing_class)
-        session.commit()
-        return {"msg": "Turma deletada com sucesso!"}
+        enrollments = session.query(Enrollment).limit(limit).offset(page*limit).all()
+        return enrollments
     except Exception as e:
         return {"error": str(e)}
     
-# ---------------------------
-# CRUD para Assignment
-# ---------------------------
-
-@app.get("/assignment")
-def get_assignments(session: Session = Depends(get_session)):
+@app.get("/class_grades_page", tags=["Class_grades"])
+def get_class_grades_page(page: int=0, limit: int = 10, session: Session = Depends(get_session)):
     try:
-        return session.query(Assignment).all()
-    except Exception as e:
-        return {"error": str(e)}
-    
-@app.post("/assignment")
-def create_assignment(assignment: Assignment, session: Session = Depends(get_session)):
-    try:
-        session.add(assignment)
-        session.commit()
-        return assignment
-    except Exception as e:
-        return {"error": str(e)}
-    
-@app.put("/assignment/{assignment_id}")
-def update_assignment(assignment_id: int, assignment_: Assignment, session: Session = Depends(get_session)):
-    try:
-        existing_assignment = session.get(Assignment, assignment_id)
-        if not existing_assignment:
-            return {"error": "Atividade não encontrada"}
-        for key, value in assignment_.dict(exclude_unset=True).items():
-            setattr(existing_assignment, key, value)
-        session.add(existing_assignment)
-        session.commit()
-        return existing_assignment
-    except Exception as e:
-        return {"error": str(e)}
-    
-@app.delete("/assignment/{assignment_id}")
-def delete_assignment(assignment_id: int, session: Session = Depends(get_session)):
-    try:
-        existing_assignment = session.get(Assignment, assignment_id)
-        if not existing_assignment:
-            return {"error": "Atividade não encontrada"}
-        session.delete(existing_assignment) 
-        session.commit()
-        return {"msg": "Atividade deletada com sucesso!"}
-    except Exception as e:
-        return {"error": str(e)}
-
-# ---------------------------
-# CRUD para AssignmentSubmission
-# ---------------------------
-
-@app.get(
-    "/submission/file",
-    responses={200: {"content": {"text/txt": {}}}},
-    response_class=Response,
-)
-def get_submission_file(submission_id: int, session: Session = Depends(get_session)):
-    try:
-        submission = session.get(AssignmentSubmission, submission_id)
-        return Response(submission.submission_file, media_type="text/txt")
-    except Exception as e:
-        return {"error": str(e)}
-        
-@app.get("/submission")
-def get_assignment_submissions(session: Session = Depends(get_session)):
-    try:
-        return session.query(AssignmentSubmission).all()
-    except Exception as e:
-        return {"error": str(e)}
-    
-@app.post("/submission")
-def create_assignment_submission(
-    assignment_submission: AssignmentSubmission, session: Session = Depends(get_session)
-):
-    try:
-        assignment_submission.submission_file = (
-            assignment_submission.submission_file.encode("latin1")
-        )
-        session.add(assignment_submission)
-        session.commit()
-        return assignment_submission
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.put("/submission/{submission_id}")
-def update_assignment_submission(
-    submission_id: int, assignment_submission: AssignmentSubmission, session: Session = Depends(get_session)
-):
-    try:
-        existing_submission = session.get(AssignmentSubmission, submission_id)
-        if not existing_submission:
-            return {"error": "Submissão não encontrada"}
-        for key, value in assignment_submission.dict(exclude_unset=True).items():
-            setattr(existing_submission, key, value)
-        session.add(existing_submission)
-        session.commit()
-        return existing_submission
-    except Exception as e:
-        return {"error": str(e)}
-    
-@app.delete("/submission/{submission_id}")
-def delete_assignment_submission(submission_id: int, session: Session = Depends(get_session)):
-    try:
-        existing_submission = session.get(AssignmentSubmission, submission_id)
-        if not existing_submission:
-            return {"error": "Submissão não encontrada"}
-        session.delete(existing_submission)
-        session.commit()
-        return {"msg": "Submissão deletada com sucesso!"}
-    except Exception as e:
-        return {"error": str(e)}
-
-# ---------------------------
-# CRUD para AssignmentGrade
-# ---------------------------
-
-@app.get("/assignment_grade")
-def get_assignment_grades(session: Session = Depends(get_session)):
-    try:
-        return session.query(AssignmentGrade).all()
-    except Exception as e:
-        return {"error": str(e)}
-    
-@app.post("/assignment_grade")
-def create_assignment_grade(
-    assignment_grade: AssignmentGrade, session: Session = Depends(get_session)
-):
-    try:
-        session.add(assignment_grade)
-        session.commit()
-        return assignment_grade
-    except Exception as e:
-        return {"error": str(e)}
-
-app.put("/assignment_grade/{assignment_grade_id}")
-def update_assignment_grade(
-    assignment_grade_id: int, assignment_grade: AssignmentGrade, session: Session = Depends(get_session)
-):
-    try:
-        existing_assignment_grade = session.get(AssignmentGrade, assignment_grade_id)
-        if not existing_assignment_grade:
-            return {"error": "Nota não encontrada"}
-        for key, value in assignment_grade.dict(exclude_unset=True).items():
-            setattr(existing_assignment_grade, key, value)
-        session.add(existing_assignment_grade)
-        session.commit()
-        return existing_assignment_grade
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.delete("/assignment_grade/{assignment_grade_id}")
-def delete_assignment_grade(assignment_grade_id: int, session: Session = Depends(get_session)):
-    try:
-        existing_assignment_grade = session.get(AssignmentGrade, assignment_grade_id)
-        if not existing_assignment_grade:
-            return {"error": "Nota não encontrada"}
-        session.delete(existing_assignment_grade)
-        session.commit()
-        return {"msg": "Nota deletada com sucesso!"}
-    except Exception as e:
-        return {"error": str(e)}
-
-# ---------------------------
-# CRUD para Enrollment
-# ---------------------------
-
-@app.get("/enrollment")
-def get_enrollments(session: Session = Depends(get_session)):
-    try:
-        return session.query(Enrollment).all()
-    except Exception as e:
-        return {"error": str(e)}
-    
-@app.post("/enrollment")
-def create_enrollment(enrollment: Enrollment, session: Session = Depends(get_session)):
-    try:
-        session.add(enrollment)
-        session.commit()
-        return enrollment
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.put("/enrollment/{enrollment_id}")
-def update_enrollment(enrollment_id: int, enrollment: Enrollment, session: Session = Depends(get_session)):
-    try:  
-        existing_enrollment = session.get(Enrollment, enrollment_id)
-        if not existing_enrollment:
-            return {"error": "Matrícula não encontrada"}
-        for key, value in enrollment.dict(exclude_unset=True).items():
-            setattr(existing_enrollment, key, value)
-        session.add(existing_enrollment)
-        session.commit()
-        return existing_enrollment
-    except Exception as e:
-        return {"error": str(e)}
-    
-@app.delete("/enrollment/{enrollment_id}")
-def delete_enrollment(enrollment_id: int, session: Session = Depends(get_session)):
-    try:
-        existing_enrollment = session.get(Enrollment, enrollment_id)
-        if not existing_enrollment:
-            return {"error": "Matrícula não encontrada"}
-        session.delete(existing_enrollment)
-        session.commit()
-        return {"msg": "Matrícula deletada com sucesso!"}
-    except Exception as e:
-        return {"error": str(e)}
-    
-# ---------------------------
-# CRUD para ClassGrades
-# ---------------------------
-
-@app.get("/class_grades")
-def get_class_grades(session: Session = Depends(get_session)):
-    try:
-        return session.query(ClassGrades).all()
-    except Exception as e:
-        return {"error": str(e)}
-    
-@app.post("/class_grades")
-def create_class_grades(
-    class_grades: ClassGrades, session: Session = Depends(get_session)
-):
-    try:
-        session.add(class_grades)
-        session.commit()
+        class_grades = session.query(ClassGrades).limit(limit).offset(page*limit).all()
         return class_grades
-    except Exception as e:
-        return {"error": str(e)}
-    
-@app.put("/class_grades/{class_grades_id}")
-def update_class_grades(
-    class_grades_id: int, class_grades: ClassGrades, session: Session = Depends(get_session)
-):
-    try:
-        existing_class_grades = session.get(ClassGrades, class_grades_id)
-        if not existing_class_grades:
-            return {"error": "Notas da turma não encontrada"}
-        for key, value in class_grades.dict(exclude_unset=True).items():
-            setattr(existing_class_grades, key, value)
-        session.add(existing_class_grades)
-        session.commit()
-        return existing_class_grades
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.delete("/class_grades/{class_grades_id}")
-def delete_class_grades(class_grades_id: int, session: Session = Depends(get_session)):
-    try:
-        existing_class_grades = session.get(ClassGrades, class_grades_id)
-        if not existing_class_grades:
-            return {"error": "Notas da turma não encontrada"}
-        session.delete(existing_class_grades)
-        session.commit()
-        return {"msg": "Notas da turma deletadas com sucesso!"}
-    except Exception as e:
-        return {"error": str(e)}
-
-# ---------------------------
-# CRUD para Subject
-# ---------------------------
-
-@app.get("/subject")
-def get_subjects(session: Session = Depends(get_session)):
-    try:
-        return session.query(Subject).all()
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.post("/subject")
-def create_subject(subject: Subject, session: Session = Depends(get_session)):
-    try:
-        session.add(subject)
-        session.commit()
-        return subject
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.put("/subject/{subject_id}")
-def update_subject(subject_id: int, subject: Subject, session: Session = Depends(get_session)):
-    try:
-        existing_subject = session.get(Subject, subject_id)
-        if not existing_subject:
-            return {"error": "Disciplina não encontrada"}
-        for key, value in subject.dict(exclude_unset=True).items():
-            setattr(existing_subject, key, value)
-        session.add(existing_subject)
-        session.commit()
-        return existing_subject
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.delete("/subject/{subject_id}")
-def delete_subject(subject_id: int, session: Session = Depends(get_session)):
-    try:
-        existing_subject = session.get(Subject, subject_id)
-        if not existing_subject:
-            return {"error": "Disciplina não encontrada"}
-        session.delete(existing_subject)
-        session.commit()
-        return {"msg": "Disciplina deletada com sucesso!"}
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.get("/total_entities")
-def get_total_entities(session: Session = Depends(get_session)):
-    try:
-        total_count = (
-            session.query(Student).count()
-            + session.query(Teacher).count()
-            + session.query(Subject).count()
-            + session.query(Class).count()
-            + session.query(Assignment).count()
-            + session.query(AssignmentSubmission).count()
-            + session.query(AssignmentGrade).count()
-            + session.query(Enrollment).count()
-            + session.query(ClassGrades).count()
-        )
-        return {"total": total_count}
-    except Exception as e:
-        return {"error": str(e)}
-    
-def paginate(query: Query, page: int, limit: int):
-    offset = (page - 1) * limit
-    total = query.count()
-    data = query.offset(offset).limit(limit).all()
-    return {
-        "page": page,
-        "limit": limit,
-        "total": total,
-        "data": data,
-    }
-    
-@app.get("/register/{entity_name}")
-def get_registers(
-    entity_name: str, page: int = 1, limit: int = 10, session: Session = Depends(get_session)
-):
-    try:
-        model_map = {
-            "student": Student,
-            "teacher": Teacher,
-            "subject": Subject,
-            "class": Class,
-            "assignment": Assignment,
-            "submission": AssignmentSubmission,
-            "grade": AssignmentGrade,
-            "enrollment": Enrollment,
-            "class_grades": ClassGrades,
-        }
-
-        model = model_map.get(entity_name.lower())
-        if model is None:
-            return {"error": "Entidade não encontrada"}
-        
-        query = session.query(model)
-        return paginate(query, page, limit)
     except Exception as e:
         return {"error": str(e)}
