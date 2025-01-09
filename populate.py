@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
@@ -88,7 +89,7 @@ assignment2 = Assignment(
 
 # assignment submission
 assignment_submission1 = AssignmentSubmission(
-    student_id=1, assignment_id=1, submission_date="2021-01-01"
+    student_id=1, assignment_id=1, submission_date=datetime.fromisoformat("2021-01-01"), comments="Good job!"
 )
 
 # assignment grade

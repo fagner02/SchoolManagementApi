@@ -1,12 +1,14 @@
 import os
+from datetime import datetime
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI
 from fastapi_crudrouter import SQLAlchemyCRUDRouter as CRUDRouter
-from sqlalchemy import create_engine
+from sqlalchemy import Extract, create_engine
 from sqlalchemy.orm import Session
 from sqlmodel import SQLModel
 from model import (
     Student,
+    StudentPublic,
     Teacher,
     Subject,
     Class,
@@ -189,5 +191,70 @@ def get_class_grades_page(page: int=0, limit: int = 10, session: Session = Depen
     try:
         class_grades = session.query(ClassGrades).limit(limit).offset(page*limit).all()
         return class_grades
+    except Exception as e:
+        return {"error": str(e)}
+    
+@app.get("/student/{student_id}/classes", tags=["Student"])
+def get_classes_by_student(student_id: int, session: Session = Depends(get_session)):
+    try:
+        classes = session.query(Class).join(Enrollment).where(Enrollment.student_id == student_id).all()
+        return classes
+    except Exception as e:
+        return {"error": str(e)}
+    
+@app.get("/student/{student_id}/assignments", tags=["Student"])
+def get_assignments_by_student(student_id: int, session: Session = Depends(get_session)):
+    try:
+        assignments = session.query(Assignment).join(Enrollment).where(Enrollment.student_id == student_id).all()
+        return assignments
+    except Exception as e:
+        return {"error": str(e)}
+    
+@app.get("/student_search", tags=["Student"])
+def get_student_search(q: str, session: Session = Depends(get_session)):
+    try:
+        students = session.query(Student).where(Student.name.like(f"%{q}%")).all()
+        return students
+    except Exception as e:
+        return {"error": str(e)}
+    
+@app.get("/submission_year", tags=["Assignment_submission"])
+def get_submission_year(year: int, session: Session = Depends(get_session)):
+    try:
+        submissions = session.query(AssignmentSubmission).filter(Extract("year",AssignmentSubmission.submission_date) == year).all()
+        return submissions
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/student/{student_id}/workload", tags=["Student"])
+def get_workload_by_student(student_id: int, session: Session = Depends(get_session)):
+    try:
+        classes = session.query(Class).join(Enrollment).where(Enrollment.student_id == student_id).all()
+        workload = sum([c.subject.workload for c in classes])
+        return {"Carga Horária": f"{workload}H"}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/students_sorted", tags=["Student"])
+def get_students_sorted(session: Session = Depends(get_session)):
+    try:
+        students = session.query(Student).order_by(Student.name).all()
+        return students
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/students_sorted_desc", tags=["Student"])
+def get_students_sorted_desc(session: Session = Depends(get_session)):
+    try:
+        students = session.query(Student).order_by(Student.name.desc()).all()
+        return students
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/students_with_classes", tags=["Student"], response_model=list[StudentPublic])
+def get_students_with_classes(session: Session = Depends(get_session)):
+    try:
+        students = session.query(Student).join(Enrollment).join(Class).all()
+        return students
     except Exception as e:
         return {"error": str(e)}

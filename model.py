@@ -1,9 +1,10 @@
 from functools import partial
 import re
 from typing import Optional, List
-from sqlalchemy import Column, ForeignKey, LargeBinary
-from sqlalchemy.orm import declared_attr, relationship, Mapped, mapped_column
-from sqlmodel import Relationship, SQLModel as _SQLModel, Field, Table
+from datetime import datetime
+from sqlalchemy import Column, DateTime, LargeBinary
+from sqlalchemy.orm import declared_attr, Mapped
+from sqlmodel import Relationship, SQLModel as _SQLModel, Field
 
 _snake_1 = partial(re.compile(r"(.)((?<![^A-Za-z])[A-Z][a-z]+)").sub, r"\1_\2")
 
@@ -91,7 +92,7 @@ class AssignmentSubmission(
     id: Optional[int] = Field(default=None, primary_key=True)
     student_id: int = Field(default=None, foreign_key="student.id")
     assignment_id: int = Field(default=None, foreign_key="assignment.id")
-    submission_date: str
+    submission_date: datetime 
     comments: Optional[str]
     submission_file: Optional[bytes] = Field(sa_column=Column(LargeBinary))
     grade: Optional["AssignmentGrade"] = Relationship(back_populates="submission")
