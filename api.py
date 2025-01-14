@@ -121,140 +121,299 @@ def get_class_grades_qtd(session: Session = Depends(get_session)):
         return {"quantidade": qtd}
     except Exception as e:
         return {"error": str(e)}
-    
-@app.get("/student_page",tags=["Student"])
+
+@app.get("/student_page", tags=["Student"])
 def get_student_page(page: int = 0, limit: int = 10, session: Session = Depends(get_session)):
-    try:
-        students = session.query(Student).limit(limit).offset(page*limit).all()
-        return students
-    except Exception as e:
-        return {"error": str(e)}
+    total = session.query(Student).count()
+    students = session.query(Student).limit(limit).offset(page*limit).all()
+    current_page = (page // limit) + 1
+    total_pages = (total // limit) + 1
+    return {
+        "data": students,
+        "pagination": {
+            "total_pages": total_pages,
+            "current_page": current_page,
+            "total": total,
+            "offset": page,
+            "limit": limit
+        }
+    }
 
 @app.get("/teacher_page", tags=["Teacher"])
-def get_teacher_page(page: int=0, limit: int = 10, session: Session = Depends(get_session)):
-    try:
-        teachers = session.query(Teacher).limit(limit).offset(page*limit).all()
-        return teachers
-    except Exception as e:
-        return {"error": str(e)}
+def get_teacher_page(page: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+    total = session.query(Teacher).count()
+    teachers = session.query(Teacher).limit(limit).offset(page*limit).all()
+    current_page = (page // limit) + 1
+    total_pages = (total // limit) + 1
+    return {
+        "data": teachers,
+        "pagination": {
+            "total_pages": total_pages,
+            "current_page": current_page,
+            "total": total,
+            "offset": page,
+            "limit": limit
+        }
+    }
     
 @app.get("/subject_page", tags=["Subject"])    
-def get_subject_page(page: int=0, limit: int = 10, session: Session = Depends(get_session)):
-    try:
-        subjects = session.query(Subject).limit(limit).offset(page*limit).all()
-        return subjects
-    except Exception as e:
-        return {"error": str(e)}
+def get_subject_page(page: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+    total = session.query(Subject).count()
+    subjects = session.query(Subject).limit(limit).offset(page*limit).all()
+    current_page = (page // limit) + 1
+    total_pages = (total // limit) + 1
+    return {
+        "data": subjects,
+        "pagination": {
+            "total_pages": total_pages,
+            "current_page": current_page,
+            "total": total,
+            "offset": page,
+            "limit": limit
+        }
+    }
     
 @app.get("/class_page", tags=["Class"])
-def get_class_page(page: int=0, limit: int = 10, session: Session = Depends(get_session)):
-    try:
-        classes = session.query(Class).limit(limit).offset(page*limit).all()
-        return classes
-    except Exception as e:
-        return {"error": str(e)}
+def get_class_page(page: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+    total = session.query(Class).count()
+    classes = session.query(Class).limit(limit).offset(page*limit).all()
+    current_page = (page // limit) + 1
+    total_pages = (total // limit) + 1
+    return {
+        "data": classes,
+        "pagination": {
+            "total_pages": total_pages,
+            "current_page": current_page,
+            "total": total,
+            "offset": page,
+            "limit": limit
+        }
+    }
     
 @app.get("/assignment_page", tags=["Assignment"])
-def get_assignment_page(page: int=0, limit: int = 10, session: Session = Depends(get_session)):
-    try:
-        assignments = session.query(Assignment).limit(limit).offset(page*limit).all()
-        return assignments
-    except Exception as e:
-        return {"error": str(e)}
+def get_assignment_page(page: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+    total = session.query(Assignment).count()
+    assignments = session.query(Assignment).limit(limit).offset(page*limit).all()
+    current_page = (page // limit) + 1
+    total_pages = (total // limit) + 1
+    return {
+        "data": assignments,
+        "pagination": {
+            "total_pages": total_pages,
+            "current_page": current_page,
+            "total": total,
+            "offset": page,
+            "limit": limit
+        }
+    }
     
 @app.get("/submission_page", tags=["Assignment_submission"])
-def get_submission_page(page: int=0, limit: int = 10, session: Session = Depends(get_session)):
-    try:
-        submissions = session.query(AssignmentSubmission).limit(limit).offset(page*limit).all()
-        return submissions
-    except Exception as e:
-        return {"error": str(e)}
+def get_submission_page(page: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+    total = session.query(AssignmentSubmission).count()
+    submissions = session.query(AssignmentSubmission).limit(limit).offset(page*limit).all()
+    current_page = (page // limit) + 1
+    total_pages = (total // limit) + 1
+    return {
+        "data": submissions,
+        "pagination": {
+            "total_pages": total_pages,
+            "current_page": current_page,
+            "total": total,
+            "offset": page,
+            "limit": limit
+        }
+    }
     
 @app.get("/grade_page", tags=["Assignment_grade"])
-def get_grade_page(page: int=0, limit: int = 10, session: Session = Depends(get_session)):
-    try:
-        grades = session.query(AssignmentGrade).limit(limit).offset(page*limit).all()
-        return grades
-    except Exception as e:
-        return {"error": str(e)}
+def get_grade_page(page: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+    total = session.query(AssignmentGrade).count()
+    grades = session.query(AssignmentGrade).limit(limit).offset(page*limit).all()
+    current_page = (page // limit) + 1
+    total_pages = (total // limit) + 1
+    return {
+        "data": grades,
+        "pagination": {
+            "total_pages": total_pages,
+            "current_page": current_page,
+            "total": total,
+            "offset": page,
+            "limit": limit
+        }
+    }
     
 @app.get("/enrollment_page", tags=["Enrollment"])
-def get_enrollment_page(page: int=0, limit: int = 10, session: Session = Depends(get_session)):
-    try:
-        enrollments = session.query(Enrollment).limit(limit).offset(page*limit).all()
-        return enrollments
-    except Exception as e:
-        return {"error": str(e)}
+def get_enrollment_page(page: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+    total = session.query(Enrollment).count()
+    enrollments = session.query(Enrollment).limit(limit).offset(page*limit).all()
+    current_page = (page // limit) + 1
+    total_pages = (total // limit) + 1
+    return {
+        "data": enrollments,
+        "pagination": {
+            "total_pages": total_pages,
+            "current_page": current_page,
+            "total": total,
+            "offset": page,
+            "limit": limit
+        }
+    }
     
 @app.get("/class_grades_page", tags=["Class_grades"])
-def get_class_grades_page(page: int=0, limit: int = 10, session: Session = Depends(get_session)):
-    try:
-        class_grades = session.query(ClassGrades).limit(limit).offset(page*limit).all()
-        return class_grades
-    except Exception as e:
-        return {"error": str(e)}
+def get_class_grades_page(page: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+    total = session.query(ClassGrades).count()
+    class_grades = session.query(ClassGrades).limit(limit).offset(page*limit).all()
+    current_page = (page // limit) + 1
+    total_pages = (total // limit) + 1
+    return {
+        "data": class_grades,
+        "pagination": {
+            "total_pages": total_pages,
+            "current_page": current_page,
+            "total": total,
+            "offset": page,
+            "limit": limit
+        }
+    }
     
 @app.get("/student/{student_id}/classes", tags=["Student"])
-def get_classes_by_student(student_id: int, session: Session = Depends(get_session)):
-    try:
-        classes = session.query(Class).join(Enrollment).where(Enrollment.student_id == student_id).all()
-        return classes
-    except Exception as e:
-        return {"error": str(e)}
-    
+def get_classes_by_student(student_id: int, page: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+    total = session.query(Class).join(Enrollment).where(Enrollment.student_id == student_id).count()
+    classes = session.query(Class).join(Enrollment).where(Enrollment.student_id == student_id).limit(limit).offset(page*limit).all()
+    current_page = (page // limit) + 1
+    total_pages = (total // limit) + 1
+    return {
+        "data": classes,
+        "pagination": {
+            "total_pages": total_pages,
+            "current_page": current_page,
+            "total": total,
+            "offset": page,
+            "limit": limit
+        }
+    }
+
 @app.get("/student/{student_id}/assignments", tags=["Student"])
-def get_assignments_by_student(student_id: int, session: Session = Depends(get_session)):
-    try:
-        assignments = session.query(Assignment).join(Enrollment).where(Enrollment.student_id == student_id).all()
-        return assignments
-    except Exception as e:
-        return {"error": str(e)}
+def get_assignments_by_student(student_id: int, page: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+    total = session.query(Assignment).join(AssignmentSubmission, Assignment.id == AssignmentSubmission.assignment_id).join(Enrollment, Assignment.class_id == Enrollment.class_id and AssignmentSubmission.student_id == Enrollment.student_id).where(Enrollment.student_id == student_id).count()
+    assignments = session.query(Assignment).join(AssignmentSubmission, Assignment.id == AssignmentSubmission.assignment_id).join(Enrollment, Assignment.class_id == Enrollment.class_id and AssignmentSubmission.student_id == Enrollment.student_id).where(Enrollment.student_id == student_id).limit(limit).offset(page*limit).all()
+    current_page = (page // limit) + 1
+    total_pages = (total // limit) + 1
+    return {
+        "data": assignments,
+        "pagination": {
+            "total_pages": total_pages,            
+            "current_page": current_page,
+            "total": total,
+            "offset": page,
+            "limit": limit
+        }
+    }
     
 @app.get("/student_search", tags=["Student"])
-def get_student_search(q: str, session: Session = Depends(get_session)):
-    try:
-        students = session.query(Student).where(Student.name.like(f"%{q}%")).all()
-        return students
-    except Exception as e:
-        return {"error": str(e)}
+def get_student_search(q: str, page: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+    total = session.query(Student).filter(Student.name.ilike(f"%{q}%")).count()
+    student = session.query(Student).filter(Student.name.ilike(f"%{q}%")).limit(limit).offset(page*limit).all()
+    current_page = (page // limit) + 1
+    total_pages = (total // limit) + 1
+    return {
+        "data": student,
+        "pagination": {
+            "total_pages": total_pages,
+            "current_page": current_page,
+            "total": total,
+            "offset": page,
+            "limit": limit
+        }
+    }
+
     
 @app.get("/submission_year", tags=["Assignment_submission"])
-def get_submission_year(year: int, session: Session = Depends(get_session)):
-    try:
-        submissions = session.query(AssignmentSubmission).filter(Extract("year",AssignmentSubmission.submission_date) == year).all()
-        return submissions
-    except Exception as e:
-        return {"error": str(e)}
+def get_submission_year(year: int, page: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+    total = session.query(AssignmentSubmission).filter(Extract('year', AssignmentSubmission.submission_date) == year).count()
+    submissions = session.query(AssignmentSubmission).filter(Extract('year', AssignmentSubmission.submission_date) == year).limit(limit).offset(page*limit).all()
+    current_page = (page // limit) + 1
+    total_pages = (total // limit) + 1
+    return {
+        "data": submissions,
+        "pagination": {
+            "total_pages": total_pages,
+            "current_page": current_page,
+            "total": total,
+            "offset": page,
+            "limit": limit
+        }
+    }
 
 @app.get("/student/{student_id}/workload", tags=["Student"])
-def get_workload_by_student(student_id: int, session: Session = Depends(get_session)):
-    try:
-        classes = session.query(Class).join(Enrollment).where(Enrollment.student_id == student_id).all()
-        workload = sum([c.subject.workload for c in classes])
-        return {"Carga Horária": f"{workload}H"}
-    except Exception as e:
-        return {"error": str(e)}
+def get_workload_by_student(student_id: int, page: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+    total = session.query(Class).join(Enrollment).where(Enrollment.student_id == student_id).count()
+    classes = session.query(Class).join(Enrollment).where(Enrollment.student_id == student_id).limit(limit).offset(page*limit).all()
+    workload = sum([c.subject.workload for c in classes])
+    current_page = (page // limit) + 1
+    total_pages = (total // limit) + 1
+    return {
+        "data" : classes,
+        "pagination": {
+            "carga_horária": f"{workload}H",
+            "total_pages": total_pages,
+            "current_page": current_page,
+            "total": total,
+            "offset": page,
+            "limit": limit
+        }
+    }
 
 @app.get("/students_sorted", tags=["Student"])
-def get_students_sorted(session: Session = Depends(get_session)):
-    try:
-        students = session.query(Student).order_by(Student.name).all()
-        return students
-    except Exception as e:
-        return {"error": str(e)}
+def get_students_sorted(page: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+    total = session.query(Student).count()
+    students = session.query(Student).order_by(Student.name).limit(limit).offset(page*limit).all()
+    current_page = (page // limit) + 1
+    total_pages = (total // limit) + 1
+    return {
+        "data": students,
+        "pagination": {
+            "total_pages": total_pages,
+            "current_page": current_page,
+            "total": total,
+            "offset": page,
+            "limit": limit
+        }
+    }
 
 @app.get("/students_sorted_desc", tags=["Student"])
-def get_students_sorted_desc(session: Session = Depends(get_session)):
-    try:
-        students = session.query(Student).order_by(Student.name.desc()).all()
-        return students
-    except Exception as e:
-        return {"error": str(e)}
+def get_students_sorted_desc(page: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+    total = session.query(Student).count()
+    students = session.query(Student).order_by(Student.name.desc()).limit(limit).offset(page*limit).all()
+    current_page = (page // limit) + 1
+    total_pages = (total // limit) + 1
+    return {
+        "data": students,
+        "pagination": {
+            "total_pages": total_pages,
+            "current_page": current_page,
+            "total": total,
+            "offset": page,
+            "limit": limit
+        }
+    }
 
-@app.get("/students_with_classes", tags=["Student"], response_model=list[StudentPublic])
-def get_students_with_classes(session: Session = Depends(get_session)):
-    try:
-        students = session.query(Student).join(Enrollment).join(Class).all()
-        return students
-    except Exception as e:
-        return {"error": str(e)}
+@app.get("/students_with_classes", tags=["Student"])
+def get_students_with_classes(page: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+    total = session.query(Student).count()
+    students = session.query(Student).limit(limit).offset(page*limit).all()
+    students_with_classes = []
+    for student in students:
+        classes = session.query(Class).join(Enrollment).where(Enrollment.student_id == student.id).all()
+        students_with_classes.append(StudentPublic(**student.dict(), classes=classes))
+    current_page = (page // limit) + 1
+    total_pages = (total // limit) + 1
+    return {
+        "data": students_with_classes,
+        "pagination": {
+            "total_pages": total_pages,
+            "current_page": current_page,
+            "total": total,
+            "offset": page,
+            "limit": limit
+        }
+    }
