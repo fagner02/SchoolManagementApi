@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from typing import Optional
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI
 from fastapi_crudrouter import SQLAlchemyCRUDRouter as CRUDRouter
@@ -419,9 +420,9 @@ def get_students_with_classes(page: int = 0, limit: int = 10, session: Session =
     }
 
 @app.get("/students_filtered", tags=["Student"])
-def get_students_filtered(page: int = 0, limit: int = 10, name: str = "", age: int = 0, semester: str = "", session: Session = Depends(get_session)):
+def get_students_filtered(page: int = 0, limit: int = 10, name: str = "", age: Optional[int] = None, semester: str = "", session: Session = Depends(get_session)):
     total = session.query(Student).count()
-    students = session.query(Student).filter(Student.name.like(f"%{name}%")).filter(Student.age == age).filter(Student.semester == semester).limit(limit).offset(page*limit).all()
+    students = session.query(Student).filter(name == "" or Student.name.like(f"%{name}%")).filter(age == None or Student.age == age).filter(semester == "" or Student.semester == semester).limit(limit).offset(page*limit).all()
     current_page = (page // limit) + 1
     total_pages = (total // limit) + 1
     return {
