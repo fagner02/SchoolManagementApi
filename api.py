@@ -417,3 +417,20 @@ def get_students_with_classes(page: int = 0, limit: int = 10, session: Session =
             "limit": limit
         }
     }
+
+@app.get("/students_filtered", tags=["Student"])
+def get_students_filtered(page: int = 0, limit: int = 10, name: str = "", age: int = 0, semester: str = "", session: Session = Depends(get_session)):
+    total = session.query(Student).count()
+    students = session.query(Student).filter(Student.name.like(f"%{name}%")).filter(Student.age == age).filter(Student.semester == semester).limit(limit).offset(page*limit).all()
+    current_page = (page // limit) + 1
+    total_pages = (total // limit) + 1
+    return {
+        "data": students,
+        "pagination": {
+            "total_pages": total_pages,
+            "current_page": current_page,
+            "total": total,
+            "offset": page,
+            "limit": limit
+        }
+    }

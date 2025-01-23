@@ -1,10 +1,12 @@
 from functools import partial
 import re
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 from sqlalchemy import Column, DateTime, LargeBinary
-from sqlalchemy.orm import declared_attr, Mapped
+from sqlalchemy.orm import Relationship, declared_attr, Mapped
 from sqlmodel import Relationship, SQLModel as _SQLModel, Field
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session
 
 _snake_1 = partial(re.compile(r"(.)((?<![^A-Za-z])[A-Z][a-z]+)").sub, r"\1_\2")
 
@@ -17,7 +19,6 @@ class SQLModel(_SQLModel):
     @declared_attr
     def __tablename__(cls) -> str:
         return snake_case(cls.__name__)
-
 
 class Enrollment(SQLModel, table=True):
     student_id: int = Field(default=None, foreign_key="student.id", primary_key=True)
