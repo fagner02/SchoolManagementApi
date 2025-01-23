@@ -3,9 +3,7 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from sqlmodel import SQLModel
-from sqlalchemy import create_engine
-# Substitua pelo URL correto do banco de dados
-DATABASE_URL = "postgresql://postgres:1234@localhost/trab_pers"  
+from api import DATABASE_URL  
 
 from alembic import context
 

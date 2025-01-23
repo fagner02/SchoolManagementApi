@@ -7,7 +7,6 @@ from sqlalchemy.orm import Relationship, declared_attr, Mapped
 from sqlmodel import Relationship, SQLModel as _SQLModel, Field
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from utils import aplicar_filtros
 
 _snake_1 = partial(re.compile(r"(.)((?<![^A-Za-z])[A-Z][a-z]+)").sub, r"\1_\2")
 
@@ -20,35 +19,6 @@ class SQLModel(_SQLModel):
     @declared_attr
     def __tablename__(cls) -> str:
         return snake_case(cls.__name__)
-    
-    def to_dict(self):
-        return {col: getattr(self, col) for col in self.__table__.columns.keys()}
-
-# Inicialização do router do FastAPI
-router = APIRouter()
-
-# Mapeamento de modelos para o endpoint de filtro
-MODELOS = {
-    "student": "Student",
-    "teacher": "Teacher",
-    "subject": "Subject",
-    "class": "Class",
-    "assignment": "Assignment",
-}
-
-@router.get("/filtros/{entidade}")
-def filtrar_entidade(
-    entidade: str,
-    default: str,
-):
-    """
-    Endpoint genérico para filtrar entidades.
-    """
-    modelo = MODELOS.get(entidade.lower())
-    if not modelo:
-        return {"erro": f"Entidade '{entidade}' não encontrada."}
-
-    return {"entidade": entidade, "default": default}
 
 class Enrollment(SQLModel, table=True):
     student_id: int = Field(default=None, foreign_key="student.id", primary_key=True)
