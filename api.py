@@ -6,6 +6,8 @@ from fastapi_crudrouter import SQLAlchemyCRUDRouter as CRUDRouter
 from sqlalchemy import Extract, create_engine
 from sqlalchemy.orm import Session
 from sqlmodel import SQLModel
+from fastapi import FastAPI
+from model import router  
 from model import (
     Student,
     StudentPublic,
@@ -19,6 +21,37 @@ from model import (
     ClassGrades,
 )
 
+import logging
+
+logging.basicConfig(
+    filename='app.log', 
+    level=logging.INFO, 
+    format='%(asctime)s - %(levelname)s - %(message)s',  # Formato do log
+)
+
+logger = logging.getLogger()
+
+def log_event(message):
+    logger.info(message)
+
+from utils import log_event
+
+from utils import log_event
+from sqlmodel import Session
+from typing import TypeVar, Generic
+
+T = TypeVar('T')
+
+def adicionar_entidade(db: Session, entidade: T):
+    try:
+        db.add(entidade)
+        db.commit()
+
+        log_event(f"{entidade._class.name_} {entidade} inserido com sucesso")
+    except Exception as e:
+        log_event(f"Erro ao adicionar {entidade._class.name_}: {e}")
+        db.rollback()
+
 load_dotenv("config.env")
 engine = create_engine(os.getenv("DATABASE_URL"), echo=False)
 SQLModel.metadata.create_all(engine)
@@ -28,6 +61,8 @@ def get_session() -> Session:
 
 
 app = FastAPI()
+
+app.include_router(router, prefix="/model", tags=["Model"])
 
 student_router = CRUDRouter(schema=Student, db_model=Student, db=get_session)
 teaher_router = CRUDRouter(schema=Teacher, db_model=Teacher, db=get_session)
